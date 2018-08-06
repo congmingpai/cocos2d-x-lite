@@ -649,16 +649,7 @@ void AudioEngineImpl::update(float dt)
         alSource = player->_alSource;
         alGetSourcei(alSource, AL_SOURCE_STATE, &sourceState);
 
-        if (player->_removeByAudioEngine)
-        {
-            AudioEngine::remove(audioID);
-            _threadMutex.lock();
-            it = _audioPlayers.erase(it);
-            _threadMutex.unlock();
-            delete player;
-            _unusedSourcesPool.push_back(alSource);
-        }
-        else if (player->_ready && sourceState == AL_STOPPED) {
+        if (player->_removeByAudioEngine || (player->_ready && sourceState == AL_STOPPED)) {
 
             std::string filePath;
             if (player->_finishCallbak) {
