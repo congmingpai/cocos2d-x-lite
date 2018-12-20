@@ -52,6 +52,8 @@
 #define TRACE_DEBUGGER_SERVER(...)
 #endif // #if COCOS2D_DEBUG
 
+uint32_t __jsbInvocationCount = 0;
+
 namespace se {
 
     Class* __jsb_CCPrivateData_class = nullptr;
@@ -490,6 +492,8 @@ namespace se {
         _oldCompartment = JS_EnterCompartment(_cx, rootedGlobalObj);
         JS_InitStandardClasses(_cx, rootedGlobalObj) ;
 
+        _globalObj->setProperty("window", Value(_globalObj));
+
         // SpiderMonkey isn't shipped with a console variable. Make a fake one.
         Value consoleVal;
         bool hasConsole = _globalObj->getProperty("console", &consoleVal) && consoleVal.isObject();
@@ -520,7 +524,7 @@ namespace se {
         JS::SetEnqueuePromiseJobCallback(_cx, onEnqueuePromiseJobCallback);
         JS::SetGetIncumbentGlobalCallback(_cx, onGetIncumbentGlobalCallback);
 
-        __jsb_CCPrivateData_class = Class::create("__CCPrivateData", _globalObj, nullptr, privateDataContructor);
+        __jsb_CCPrivateData_class = Class::create("__PrivateData", _globalObj, nullptr, privateDataContructor);
         __jsb_CCPrivateData_class->defineFinalizeFunction(privateDataFinalize);
         __jsb_CCPrivateData_class->install();
 
@@ -1099,6 +1103,11 @@ namespace se {
         _fileOperationDelegate = delegate;
     }
 
+    const ScriptEngine::FileOperationDelegate& ScriptEngine::getFileOperationDelegate() const
+    {
+        return _fileOperationDelegate;
+    }
+
     bool ScriptEngine::runScript(const std::string& path, Value* ret/* = nullptr */)
     {
         assert(_fileOperationDelegate.isValid());
@@ -1204,7 +1213,7 @@ namespace se {
         _exceptionCallback = cb;
     }
 
-    void ScriptEngine::enableDebugger(const std::string& serverAddr, uint32_t port)
+    void ScriptEngine::enableDebugger(const std::string& serverAddr, uint32_t port, bool isWait)
     {
         _debuggerServerAddr = serverAddr;
         _debuggerServerPort = port;

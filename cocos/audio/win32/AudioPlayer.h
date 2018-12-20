@@ -38,10 +38,9 @@
 #else
 #include <OpenalSoft/al.h>
 #endif
-#include "platform/CCPlatformMacros.h"
+#include "base/ccMacros.h"
 
 NS_CC_BEGIN
-namespace experimental{
 
 class AudioCache;
 class AudioEngineImpl;
@@ -92,7 +91,6 @@ protected:
     friend class AudioEngineImpl;
 };
 
-}
 NS_CC_END
 
 #endif //CC_TARGET_PLATFORM == CC_PLATFORM_WIN32

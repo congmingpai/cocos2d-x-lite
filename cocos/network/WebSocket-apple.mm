@@ -22,20 +22,8 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  ****************************************************************************/
-
-//
-//  WebSocket-apple.m
-//  cocos2d_libs
-//
-//  Created by James Chen on 7/3/17.
-//
-//
-
 #include "network/WebSocket.h"
 #include "base/CCData.h"
-#include "base/CCDirector.h"
-#include "base/CCEventDispatcher.h"
-#include "base/CCEventListenerCustom.h"
 
 #import "SocketRocket/SocketRocket.h"
 
@@ -49,9 +37,6 @@ static std::vector<cocos2d::network::WebSocket*>* __websocketInstances = nullptr
 {
 
 }
-
-@property (nonatomic, assign) cocos2d::EventListenerCustom* resetDirectorListener;
-
 @end
 
 //
@@ -79,14 +64,13 @@ static std::vector<cocos2d::network::WebSocket*>* __websocketInstances = nullptr
         _ws.delegate = self;
         [_ws open];
         _isDestroyed = false;
-        self.resetDirectorListener = nullptr;
     }
     return self;
 }
 
 -(void) dealloc
 {
-    NSLog(@"WebSocketImpl-apple dealloc: %p, SRWebSocket ref: %ld", self, CFGetRetainCount((__bridge CFTypeRef)_ws));
+    // NSLog(@"WebSocketImpl-apple dealloc: %p, SRWebSocket ref: %ld", self, CFGetRetainCount((__bridge CFTypeRef)_ws));
 }
 
 -(void) sendString:(NSString*) message
@@ -155,7 +139,7 @@ static std::vector<cocos2d::network::WebSocket*>* __websocketInstances = nullptr
 {
     if (!_isDestroyed)
     {
-        NSLog(@"Websocket Connected");
+        // NSLog(@"Websocket Connected");
         if (webSocket.protocol != nil)
             _selectedProtocol = [webSocket.protocol UTF8String];
         _delegate->onOpen(_ccws);
@@ -263,7 +247,7 @@ WebSocket::WebSocket()
 
 WebSocket::~WebSocket()
 {
-    NSLog(@"In the destructor of WebSocket-apple (%p).", this);
+    // NSLog(@"In the destructor of WebSocket-apple (%p).", this);
 
     if (__websocketInstances != nullptr)
     {
@@ -276,11 +260,6 @@ WebSocket::~WebSocket()
         {
             NSLog(@"ERROR: WebSocket instance wasn't added to the container which saves websocket instances!");
         }
-    }
-
-    if (_impl != nil)
-    {
-        cocos2d::Director::getInstance()->getEventDispatcher()->removeEventListener(_impl.resetDirectorListener);
     }
 }
 
@@ -302,13 +281,6 @@ bool WebSocket::init(const Delegate& delegate,
         }
     }
     _impl = [[WebSocketImpl alloc] initWithURL: url protocols:nsProtocols allowsUntrustedSSLCertificates:NO ws: this delegate:delegate];
-
-    if (_impl != nil)
-    {
-        _impl.resetDirectorListener = cocos2d::Director::getInstance()->getEventDispatcher()->addCustomEventListener(cocos2d::Director::EVENT_RESET, [this](cocos2d::EventCustom*){
-            close();
-        });
-    }
 
     return _impl != nil;
 }
@@ -362,6 +334,24 @@ void WebSocket::closeAsync()
     }
 
     [_impl closeAsync];
+}
+
+void WebSocket::closeAsync(int code, const std::string &reason)
+{
+    //lws_close_reason() replacement required
+    closeAsync();
+}
+
+std::string WebSocket::getExtensions() const
+{
+    //TODO websocket extensions
+    return "";
+}
+
+size_t WebSocket::getBufferedAmount() const
+{
+    //TODO pending send bytes
+    return 0;
 }
 
 WebSocket::State WebSocket::getReadyState() const

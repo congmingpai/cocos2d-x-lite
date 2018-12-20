@@ -24,10 +24,15 @@
 ****************************************************************************/
 
 #include "base/CCValue.h"
+#include "base/ccUtils.h"
+
 #include <cmath>
 #include <sstream>
 #include <iomanip>
-#include "base/ccUtils.h"
+#include <float.h>
+#include <stdlib.h>
+#include <memory.h>
+
 
 NS_CC_BEGIN
 

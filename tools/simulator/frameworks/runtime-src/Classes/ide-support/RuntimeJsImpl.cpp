@@ -31,36 +31,28 @@
 
 #include "RuntimeJsImpl.h"
 
-#include "cocos/base/CCDirector.h"        // 2dx engine
-
 #if (CC_CODE_IDE_DEBUG_SUPPORT > 0)
 
 #include "runtime/ConfigParser.h"   // config
 #include "runtime/Runtime.h"
 #include "runtime/FileServer.h"
+#include "runtime/ConfigParser.h"
 
 // js
-#include "scripting/js-bindings/jswrapper/SeApi.h"
-#include "scripting/js-bindings/auto/jsb_cocos2dx_auto.hpp"
-#include "scripting/js-bindings/manual/ScriptingCore.h"
-#include "scripting/js-bindings/manual/jsb_conversions.hpp"
-#include "scripting/js-bindings/manual/jsb_module_register.hpp"
-#include "scripting/js-bindings/manual/jsb_global.h"
+#include "cocos/scripting/js-bindings/jswrapper/SeApi.h"
+#include "cocos/scripting/js-bindings/auto/jsb_cocos2dx_auto.hpp"
+#include "cocos/scripting/js-bindings/manual/jsb_classtype.hpp"
+#include "cocos/scripting/js-bindings/manual/jsb_conversions.cpp"
+#include "cocos/scripting/js-bindings/manual/jsb_module_register.hpp"
+#include "cocos/scripting/js-bindings/manual/jsb_global.h"
 
 static bool reloadScript(const string& file)
 {
-    auto director = cocos2d::Director::getInstance();
-    cocos2d::FontFNT::purgeCachedData();
-    if (director->getOpenGLView())
-    {
-        cocos2d::SpriteFrameCache::getInstance()->removeSpriteFrames();
-        director->getTextureCache()->removeAllTextures();
-    }
-    cocos2d::FileUtils::getInstance()->purgeCachedEntries();
-    
-    //director->getScheduler()->unscheduleAll();
-    //director->getScheduler()->scheduleUpdate(director->getActionManager(), Scheduler::PRIORITY_SYSTEM, false);
-    
+    CCLOG("------------------------------------------------");
+    CCLOG("RELOAD Js FILE: %s", file.c_str());
+    CCLOG("------------------------------------------------");
+    se::ScriptEngine::getInstance()->cleanup();
+
     string modulefile = file;
     if (modulefile.empty())
     {
@@ -175,16 +167,14 @@ bool RuntimeJsImpl::initJsEnv()
         return true;
     }
 
-    cocos2d::ScriptEngineProtocol *engine = ScriptingCore::getInstance();
-    cocos2d::ScriptEngineManager::getInstance()->setScriptEngine(engine);
-
     auto se = se::ScriptEngine::getInstance();
     jsb_set_xxtea_key("");
     jsb_init_file_operation_delegate();
 
 #if defined(COCOS2D_DEBUG) && (COCOS2D_DEBUG > 0)
     // Enable debugger here
-    jsb_enable_debugger("0.0.0.0", 5086);
+    auto parser = ConfigParser::getInstance();
+    jsb_enable_debugger("0.0.0.0", parser->getDebugPort(), parser->isWaitForConnect());
 #endif
 
     se->setExceptionCallback([](const char* location, const char* message, const char* stack){
@@ -225,37 +215,10 @@ void RuntimeJsImpl::onStartDebuger(const rapidjson::Document& dArgParse, rapidjs
 
 void RuntimeJsImpl::onClearCompile(const rapidjson::Document& dArgParse, rapidjson::Document& dReplyParse)
 {
-//TODO    if (dArgParse.HasMember("modulefiles") && dArgParse["modulefiles"].Size() != 0)
-//    {
-//        const rapidjson::Value& objectfiles = dArgParse["modulefiles"];
-//        for (rapidjson::SizeType i = 0; i < objectfiles.Size(); i++)
-//        {
-//            ScriptingCore::getInstance()->cleanScript(objectfiles[i].GetString());
-//        }
-//    }
-//    else
-//    {
-//        std::unordered_map<std::string, JS::PersistentRootedScript*> *filenameScript = ScriptingCore::getInstance()->getFileScript();
-//        filenameScript->clear();
-//    }
-//    
-//    dReplyParse.AddMember("code",0,dReplyParse.GetAllocator());
 }
 
 void RuntimeJsImpl::onPrecompile(const rapidjson::Document& dArgParse, rapidjson::Document& dReplyParse)
 {
-//    const rapidjson::Value& objectfiles = dArgParse["modulefiles"];
-//    for (rapidjson::SizeType i = 0; i < objectfiles.Size(); i++)
-//    {
-//TODO cjh        ScriptingCore* sc = ScriptingCore::getInstance();
-//        JSContext* gc = sc->getGlobalContext();
-//        JS::RootedObject global(gc, sc->getGlobalObject());
-//        JS::RootedScript script(gc);
-//        
-//        sc->compileScript(objectfiles[i].GetString(), global, &script);
-//    }
-//    
-//    dReplyParse.AddMember("code",0,dReplyParse.GetAllocator());
 }
 
 void RuntimeJsImpl::onReload(const rapidjson::Document &dArgParse, rapidjson::Document &dReplyParse)
@@ -286,12 +249,11 @@ void RuntimeJsImpl::onReload(const rapidjson::Document &dArgParse, rapidjson::Do
 
 void RuntimeJsImpl::onRemove(const std::string &filename)
 {
-//TODO cjh    ScriptingCore::getInstance()->cleanScript(filename.c_str());
 }
 
 void RuntimeJsImpl::end()
 {
-    cocos2d::ScriptEngineManager::destroyInstance();
+    se::ScriptEngine::getInstance()->destroyInstance();
     RuntimeProtocol::end();
 }
 
@@ -313,14 +275,9 @@ bool RuntimeJsImpl::loadScriptFile(const std::string& path)
     CCLOG("------------------------------------------------");
     
     initJsEnv();
-    auto engine = ScriptingCore::getInstance();
 
-    // if (RuntimeEngine::getInstance()->getProjectConfig().getDebuggerType() != kCCRuntimeDebuggerNone)
-    // {
     this->startWithDebugger();
-    // }
-    
-    cocos2d::ScriptEngineManager::getInstance()->setScriptEngine(engine);
+
     return jsb_run_script(filepath);
 }
 

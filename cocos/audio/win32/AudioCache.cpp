@@ -31,7 +31,7 @@
 
 #include "audio/win32/AudioCache.h"
 #include <thread>
-#include "base/CCDirector.h"
+#include "platform/CCApplication.h"
 #include "base/CCScheduler.h"
 
 #include "audio/win32/AudioDecoderManager.h"
@@ -52,7 +52,6 @@ unsigned int __idIndex = 0;
 #define PCMDATA_CACHEMAXSIZE 1048576
 
 using namespace cocos2d;
-using namespace cocos2d::experimental;
 
 AudioCache::AudioCache()
 : _totalFrames(0)
@@ -285,7 +284,7 @@ void AudioCache::readDataTask(unsigned int selfId)
         }
     }
 
-    //FIXME: Why to invoke play callback first? Should it be after 'load' callback?
+    //IDEA: Why to invoke play callback first? Should it be after 'load' callback?
     invokingPlayCallbacks();
     invokingLoadCallbacks();
 
@@ -360,7 +359,7 @@ void AudioCache::invokingLoadCallbacks()
     }
 
     auto isDestroyed = _isDestroyed;
-    auto scheduler = Director::getInstance()->getScheduler();
+    auto scheduler = Application::getInstance()->getScheduler();
     scheduler->performFunctionInCocosThread([&, isDestroyed](){
         if (*isDestroyed)
         {

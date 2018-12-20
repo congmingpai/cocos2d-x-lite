@@ -28,7 +28,7 @@ THE SOFTWARE.
 #define __JSB_LOCALSTORAGE_H
 
 #include <string>
-#include "platform/CCPlatformMacros.h"
+#include "base/ccMacros.h"
 
 /**
  * @addtogroup storage
@@ -54,6 +54,12 @@ void CC_DLL localStorageRemoveItem( const std::string& key );
 
 /** Removes all items from the JS. */
 void CC_DLL localStorageClear();
+
+/** Gets an key from the JS. */
+void CC_DLL localStorageGetKey(const int nIndex, std::string *outKey);
+
+/** Gets all items count in the JS. */
+void CC_DLL localStorageGetLength(int& outLength);
 
 // end group
 /// @}

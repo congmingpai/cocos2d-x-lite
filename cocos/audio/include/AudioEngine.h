@@ -26,7 +26,7 @@
 #pragma once
 
 #include "platform/CCPlatformConfig.h"
-#include "platform/CCPlatformMacros.h"
+#include "base/ccMacros.h"
 #include "audio/include/Export.h"
 
 #include <functional>
@@ -44,8 +44,6 @@
  */
 
 NS_CC_BEGIN
-namespace experimental {
-
 /**
  * @class AudioProfile
  *
@@ -369,7 +367,6 @@ protected:
     friend class AudioEngineImpl;
 };
 
-} // namespace experimental {
 NS_CC_END
 
 // end group

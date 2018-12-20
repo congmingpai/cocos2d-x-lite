@@ -25,7 +25,6 @@
  ****************************************************************************/
 
 #include "base/CCData.h"
-#include "base/CCConsole.h"
 
 NS_CC_BEGIN
 
@@ -114,6 +113,7 @@ void Data::copy(const unsigned char* bytes, const ssize_t size)
 
 void Data::fastSet(unsigned char* bytes, const ssize_t size)
 {
+    free(_bytes);
     _bytes = bytes;
     _size = size;
 }
@@ -130,7 +130,9 @@ unsigned char* Data::takeBuffer(ssize_t* size)
     auto buffer = getBytes();
     if (size)
         *size = getSize();
-    fastSet(nullptr, 0);
+
+    _bytes = nullptr;
+    _size = 0;
     return buffer;
 }
 

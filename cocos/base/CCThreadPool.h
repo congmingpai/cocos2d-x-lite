@@ -1,6 +1,5 @@
 /****************************************************************************
- Copyright (c) 2016 Chukong Technologies Inc.
- Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
+ Copyright (c) 2016-2017 Chukong Technologies Inc.
  
  http://www.cocos2d-x.org
  
@@ -27,7 +26,9 @@
  ****************************************************************************/
 #pragma once
 
+#include "base/ccUtils.h"
 #include "platform/CCStdC.h"
+#include "platform/CCPlatformDefine.h"
 
 #include <functional>
 #include <memory>
@@ -38,7 +39,7 @@
 #include <vector>
 #include <atomic>
 
-namespace cocos2d { namespace experimental {
+namespace cocos2d {
 
 /**
  * @addtogroup base
@@ -212,7 +213,7 @@ private:
     std::atomic<bool> _isDone;
     std::atomic<bool> _isStop;
 
-    //FIXME: std::atomic<int> isn't supported by ndk-r10e while compiling with `armeabi` arch.
+    //IDEA: std::atomic<int> isn't supported by ndk-r10e while compiling with `armeabi` arch.
     // So using a mutex here instead.
     int _idleThreadNum;  // how many threads are waiting
     std::mutex _idleThreadNumMutex;
@@ -234,4 +235,4 @@ private:
 // end of base group
 /// @}
 
-}} // namespace cocos2d { namespace experimental {
+} // namespace cocos2d {

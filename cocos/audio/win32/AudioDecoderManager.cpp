@@ -30,10 +30,9 @@ THE SOFTWARE.
 #include "audio/win32/AudioDecoderMp3.h"
 #include "audio/win32/AudioMacros.h"
 #include "platform/CCFileUtils.h"
-#include "base/CCConsole.h"
 #include "mpg123/mpg123.h"
 
-namespace cocos2d { namespace experimental {
+namespace cocos2d { 
 
 static bool __mp3Inited = false;
 
@@ -67,5 +66,5 @@ void AudioDecoderManager::destroyDecoder(AudioDecoder* decoder)
     delete decoder;
 }
 
-}} // namespace cocos2d { namespace experimental {
+} // namespace cocos2d { 
 

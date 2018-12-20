@@ -40,14 +40,13 @@ program
     .parse(process.argv);
 
 gulp.task('make-cocos2d-x', gulpSequence('gen-cocos2d-x', 'upload-cocos2d-x'));
-gulp.task('make-prebuilt', gulpSequence('gen-libs', 'collect-prebuilt-mk', 'archive-prebuilt-mk', 'archive-prebuilt', 'upload-prebuilt', 'upload-prebuilt-mk'));
 gulp.task('make-simulator', gulpSequence('gen-simulator', 'sign-simulator', 'update-simulator-config', 'update-simulator-dll', 'archive-simulator', 'upload-simulator'));
 
 if (process.platform === 'darwin') {
-    gulp.task('publish', gulpSequence('update', 'init', 'bump-version', 'make-cocos2d-x', 'make-simulator', 'make-prebuilt', 'push-tag'));
+    gulp.task('publish', gulpSequence('update', 'init', 'bump-version', 'make-cocos2d-x', 'make-simulator', 'push-tag'));
 }
 else {
-    gulp.task('publish', gulpSequence('update', 'init', 'bump-version', 'make-simulator', 'make-prebuilt'));
+    gulp.task('publish', gulpSequence('update', 'init', 'bump-version', 'make-simulator'));
 }
 
 function execSync(cmd, workPath) {
@@ -138,32 +137,6 @@ gulp.task('init', function(cb) {
     cb();
 });
 
-gulp.task('gen-libs', function(cb) {
-    var cocosConsoleRoot = './tools/cocos2d-console/bin';
-    var cocosConsoleBin;
-    if (process.platform === 'darwin') {
-        cocosConsoleBin = Path.join(cocosConsoleRoot, 'cocos');
-    } else {
-        cocosConsoleBin = Path.join(cocosConsoleRoot, 'cocos.bat');
-    }
-    var child = spawn(cocosConsoleBin, 
-        'gen-libs -m release --vs 2015 --android-studio --app-abi armeabi:arm64-v8a:armeabi-v7a:x86'.split(' '), 
-        {
-            stdio: 'inherit'
-        }
-    );
-    child.on('close', (code) => {
-        if (code !== 0) {
-            cb('Generate libs failed');
-            return;
-        }
-        cb();
-    });
-    child.on('error', function() {
-        cb('Generate libs failed');
-    });
-});
-
 gulp.task('gen-cocos2d-x', function(cb) {
     execSync('./git-archive-all cocos2d-x.zip', './tools/make-package');
     cb();
@@ -206,31 +179,21 @@ gulp.task('gen-simulator', function(cb) {
 });
 
 gulp.task('sign-simulator', function () {
-    if (process.platform === 'darwin') {
-        try {
-            var cmd = fs.readFileSync(Path.join(process.env.HOME, '.ssh', 'codesignCmd_simulator.txt'), 'utf8');
-            execSync(cmd);
-        }
-        catch (e) {
-            console.warn('No need to run sign-simulator since v1.10.', e);
-        }
+    try {
+        var cmd = fs.readFileSync(Path.join(process.env.HOME, '.ssh', 'codesignCmd_simulator.txt'), 'utf8');
+        execSync(cmd);
+    }
+    catch (e) {
+        console.warn('No need to run sign-simulator since v1.10.', e);
     }
 });
 
-gulp.task('collect-prebuilt-mk', function() {
-    fs.removeSync('./prebuilt_mk');
-    return gulp.src([
-        '**/prebuilt-mk/Android.mk',
-    ], {
-        base: './'
-    }).pipe(gulp.dest('prebuilt_mk'));
-});
-
-gulp.task('update-simulator-config', ['update-simulator-script'], function(cb) {
+gulp.task('update-simulator-config', function(cb) {
     var destPath = process.platform === 'win32' ? './simulator/win32/config.json' : './simulator/mac/Simulator.app/Contents/Resources/config.json';
     fs.copy('./tools/simulator/config.json', destPath, cb);
 });
 
+// 在 'sign-simulator' 之后执行，以保留这些 dll 来自第三方的签名
 gulp.task('update-simulator-dll', function(cb) {
     if (process.platform === 'win32') {
         downloadSimulatorDLL(cb);
@@ -239,56 +202,10 @@ gulp.task('update-simulator-dll', function(cb) {
     }
 });
 
-gulp.task('update-simulator-script', function(cb) {
-    var simulatorPath = process.platform === 'win32' ? './simulator/win32' : './simulator/mac/Simulator.app/Contents/Resources';
-    var destPath = simulatorPath + '/script';
-    var updateScript = function(callback) {
-        fs.copy('./cocos/scripting/js-bindings/script', destPath, {
-            clobber: true,
-            filter: function(name) {
-                if (name.startsWith('.DS_Store')) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-        }, callback);
-    };
-
-    if (!fs.existsSync(simulatorPath)) {
-        console.error(`Cant\'t find simulator dir [${simulatorPath}]`);
-    } else {
-        updateScript(cb);
-    }
-});
-
-gulp.task('archive-prebuilt-mk', function() {
-    return gulp.src('./prebuilt_mk/**/*')
-        .pipe(zip('prebuilt_mk_' + process.platform + '.zip'))
-        .pipe(gulp.dest('./'));
-});
-
 gulp.task('archive-simulator', function() {
     return gulp.src('./simulator/**/*')
         .pipe(zip('simulator_' + process.platform + '.zip'))
         .pipe(gulp.dest('./'));
-});
-
-gulp.task('archive-prebuilt', function() {
-    return gulp.src('./prebuilt/**/*', {
-            base: './'
-        }).pipe(zip('prebuilt_' + process.platform + '.zip'))
-        .pipe(gulp.dest('./'));
-});
-
-gulp.task('upload-prebuilt-mk', function(cb) {
-    var zipFileName = 'prebuilt_mk_' + process.platform + '.zip';
-    uploadZipFile(zipFileName, '.', cb);
-});
-
-gulp.task('upload-prebuilt', function(cb) {
-    var zipFileName = 'prebuilt_' + process.platform + '.zip';
-    uploadZipFile(zipFileName, '.', cb);
 });
 
 gulp.task('upload-cocos2d-x', function(cb) {

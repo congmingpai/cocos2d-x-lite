@@ -28,7 +28,10 @@ THE SOFTWARE.
 #include "audio/android/AudioDecoderSLES.h"
 #include "platform/CCFileUtils.h"
 
-namespace cocos2d { namespace experimental {
+#include <thread>
+#include <mutex>
+
+namespace cocos2d { 
 
 /* Explicitly requesting SL_IID_ANDROIDSIMPLEBUFFERQUEUE and SL_IID_PREFETCHSTATUS
 * on the UrlAudioPlayer object for decoding, SL_IID_METADATAEXTRACTION for retrieving the
@@ -194,12 +197,12 @@ bool AudioDecoderSLES::decodeToPcm()
     {
         off_t start = 0, length = 0;
         std::string relativePath;
-        size_t position = _url.find("assets/");
+        size_t position = _url.find("@assets/");
 
         if (0 == position)
         {
-            // "assets/" is at the beginning of the path and we don't want it
-            relativePath = _url.substr(strlen("assets/"));
+            // "@assets/" is at the beginning of the path and we don't want it
+            relativePath = _url.substr(strlen("@assets/"));
         } else
         {
             relativePath = _url;
@@ -229,7 +232,7 @@ bool AudioDecoderSLES::decodeToPcm()
     decBuffQueue.numBuffers = NB_BUFFERS_IN_QUEUE;
     /*    set up the format of the data in the buffer queue */
     pcm.formatType = SL_DATAFORMAT_PCM;
-    // FIXME valid value required but currently ignored
+    // IDEA: valid value required but currently ignored
     pcm.numChannels = 2;
     pcm.samplesPerSec = SL_SAMPLINGRATE_44_1;
     pcm.bitsPerSample = SL_PCMSAMPLEFORMAT_FIXED_16;
@@ -259,7 +262,7 @@ bool AudioDecoderSLES::decodeToPcm()
     SL_RETURN_VAL_IF_FAILED(result, false, "GetInterface SL_IID_PLAY failed");
 
     /* Set up the player callback to get events during the decoding */
-    // FIXME currently ignored
+    // IDEA: currently ignored
     result = (*playItf)->SetMarkerPosition(playItf, 2000);
     SL_RETURN_VAL_IF_FAILED(result, false, "SetMarkerPosition failed");
 
@@ -588,7 +591,7 @@ void AudioDecoderSLES::decodeToPcmCallback(SLAndroidSimpleBufferQueueItf queueIt
     ALOGV("%s ...", __FUNCTION__);
     _counter++;
     SLresult result;
-    // FIXME: ??
+    // IDEA: ??
     if (_counter % 1000 == 0)
     {
         SLmillisecond msec;
@@ -643,4 +646,4 @@ void AudioDecoderSLES::decodeToPcmCallback(SLAndroidSimpleBufferQueueItf queueIt
     queryAudioInfo();
 }
 
-}} // namespace cocos2d { namespace experimental {
+} // namespace cocos2d { 

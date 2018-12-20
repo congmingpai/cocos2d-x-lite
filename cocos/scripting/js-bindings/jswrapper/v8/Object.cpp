@@ -143,7 +143,7 @@ namespace se {
             obj->_obj.persistent().Reset();
             obj->_rootCount = 0;
 
-            if (cls != nullptr && cls->_name == "__CCPrivateData")
+            if (cls != nullptr && cls->_name == "__PrivateData")
             {
                 toReleaseObjects.push_back(obj);
             }
@@ -481,6 +481,7 @@ namespace se {
         }
         size_t argc = 0;
         std::vector<v8::Local<v8::Value>> argv;
+        argv.reserve(10);
         argc = args.size();
         internal::seToJsArgs(__isolate, args, &argv);
 

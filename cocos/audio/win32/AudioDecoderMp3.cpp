@@ -27,12 +27,11 @@
 #include "audio/win32/AudioMacros.h"
 #include "platform/CCFileUtils.h"
 
-#include "base/CCConsole.h"
 #include "mpg123/mpg123.h"
 
 #define LOG_TAG "AudioDecoderMp3"
 
-namespace cocos2d { namespace experimental {
+namespace cocos2d { 
 
     static bool __mp3Inited = false;
 
@@ -181,4 +180,4 @@ namespace cocos2d { namespace experimental {
         return static_cast<uint32_t>(mpg123_tell(_mpg123handle));
     }
 
-}} // namespace cocos2d { namespace experimental {
+} // namespace cocos2d { 

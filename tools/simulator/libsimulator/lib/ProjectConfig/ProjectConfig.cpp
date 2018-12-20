@@ -63,7 +63,7 @@ ProjectConfig::ProjectConfig()
     , _packagePath("")
     , _frameSize(960, 640)
     , _frameScale(1.0f)
-    , _showConsole(true)
+    , _showConsole(false)
     , _loadPrecompiledFramework(false)
     , _writeDebugLogToFile(false)
     , _windowOffset(0, 0)
@@ -421,7 +421,7 @@ void ProjectConfig::parseCommandLine(const vector<string> &args)
         }
         else if (arg.compare("-port") == 0)
         {
-            CCLOG("TODO:");
+            CCLOG("REFINE:");
         }
         else if (arg.compare("-listen") == 0)
         {

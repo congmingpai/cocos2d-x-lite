@@ -31,7 +31,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "base/CCEventDispatcher.h"
 #include "platform/CCFileUtils.h"
 #include "network/CCDownloader.h"
 
@@ -76,6 +75,7 @@ public:
     
     typedef std::function<int(const std::string& versionA, const std::string& versionB)> VersionCompareHandle;
     typedef std::function<bool(const std::string& path, Manifest::Asset asset)> VerifyCallback;
+    typedef std::function<void(EventAssetsManagerEx *event)> EventCallback;
     
     /** @brief Create function for creating a new AssetsManagerEx
      @param manifestUrl   The url for the local manifest file
@@ -188,6 +188,11 @@ public:
      */
     void setVerifyCallback(const VerifyCallback& callback) {_verifyCallback = callback;};
     
+    /** @brief Set the event callback for receiving update process events
+     * @param callback  The event callback function
+     */
+    void setEventCallback(const EventCallback& callback) {_eventCallback = callback;};
+    
 CC_CONSTRUCTOR_ACCESS:
     
     AssetsManagerEx(const std::string& manifestUrl, const std::string& storagePath);
@@ -287,7 +292,7 @@ private:
     std::string _eventName;
     
     //! Reference to the global event dispatcher
-    EventDispatcher *_eventDispatcher;
+//    EventDispatcher *_eventDispatcher;
     //! Reference to the global file utils
     FileUtils *_fileUtils;
     
@@ -387,6 +392,9 @@ private:
     
     //! Callback function to verify the downloaded assets
     VerifyCallback _verifyCallback;
+    
+    //! Callback function to dispatch events
+    EventCallback _eventCallback;
     
     //! Marker for whether the assets manager is inited
     bool _inited;

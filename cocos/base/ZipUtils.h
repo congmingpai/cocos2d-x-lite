@@ -30,7 +30,7 @@ THE SOFTWARE.
 
 #include <string>
 #include "platform/CCPlatformConfig.h"
-#include "platform/CCPlatformMacros.h"
+#include "base/ccMacros.h"
 #include "platform/CCPlatformDefine.h"
 #include "platform/CCFileUtils.h"
 
@@ -228,7 +228,7 @@ typedef struct unz_file_info_s unz_file_info;
         *
         * @param zipFile Zip file name
         * @param filter The first part of file names, which should be accessible.
-        *               For example, "assets/". Other files will be missed.
+        *               For example, "@assets/". Other files will be missed.
         *
         * @since v2.0.5
         */

@@ -2,7 +2,6 @@
 Copyright (c) 2010      Ricardo Quesada
 Copyright (c) 2010-2012 cocos2d-x.org
 Copyright (c) 2013-2016 Chukong Technologies Inc.
-Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
 
 http://www.cocos2d-x.org
 
@@ -39,8 +38,6 @@ THE SOFTWARE.
  * @{
  */
 NS_CC_BEGIN
-
-class EventCustom;
 
 /** @class Configuration
  * @brief Configuration contains some openGL variables
@@ -112,13 +109,13 @@ public:
      *
      * @return Is true if supports S3TC Texture Compressed.
      */
-//    bool supportsS3TC() const;
+    bool supportsS3TC() const;
 
     /** Whether or not ATITC Texture Compressed is supported.
      *
      * @return Is true if supports ATITC Texture Compressed.
      */
-//    bool supportsATITC() const;
+    bool supportsATITC() const;
 
     /** Whether or not BGRA8888 textures are supported.
      *
@@ -242,8 +239,8 @@ protected:
     GLint           _maxModelviewStackDepth;
     bool            _supportsPVRTC;
     bool            _supportsETC1;
-//    bool            _supportsS3TC;
-//    bool            _supportsATITC;
+    bool            _supportsS3TC;
+    bool            _supportsATITC;
     bool            _supportsNPOT;
     bool            _supportsBGRA8888;
     bool            _supportsDiscardFramebuffer;
@@ -259,8 +256,6 @@ protected:
     int             _maxSpotLightInShader; // max support spot light in shader
 
     ValueMap        _valueDict;
-
-    EventCustom*    _loadedEvent;
 };
 
 

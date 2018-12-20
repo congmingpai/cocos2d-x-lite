@@ -94,19 +94,21 @@ class HeadTaskHandler extends AsyncHttpResponseHandler {
     String _host;
     String _url;
     String _path;
+    String[] _header;
     private Cocos2dxDownloader _downloader;
 
     void LogD(String msg) {
         android.util.Log.d("Cocos2dxDownloader", msg);
     }
 
-    public HeadTaskHandler(Cocos2dxDownloader downloader, int id, String host, String url, String path) {
+    public HeadTaskHandler(Cocos2dxDownloader downloader, int id, String host, String url, String path, String[] header) {
         super();
         _downloader = downloader;
         _id = id;
         _host = host;
         _url = url;
         _path = path;
+        _header = header;
     }
 
     @Override
@@ -120,7 +122,7 @@ class HeadTaskHandler extends AsyncHttpResponseHandler {
             }
         }
         Cocos2dxDownloader.setResumingSupport(_host, acceptRanges);
-        Cocos2dxDownloader.createTask(_downloader, _id, _url, _path);
+        Cocos2dxDownloader.createTask(_downloader, _id, _url, _path, _header);
     }
 
     @Override
@@ -239,7 +241,7 @@ class DownloadTask {
 
 public class Cocos2dxDownloader {
     private int _id;
-    private AsyncHttpClient _httpClient = new AsyncHttpClient();
+    private AsyncHttpClient _httpClient = new AsyncHttpClient(true, 80, 443);
     private String _tempFileNameSufix;
     private int _countOfMaxProcessingTasks;
     private HashMap _taskMap = new HashMap();
@@ -273,12 +275,14 @@ public class Cocos2dxDownloader {
         DownloadTask task = (DownloadTask)_taskMap.get(id);
         if (null == task) return;
         _taskMap.remove(id);
+        _runningTaskCount -= 1;
         Cocos2dxHelper.runOnGLThread(new Runnable() {
             @Override
             public void run() {
                 nativeOnFinish(_id, id, errCode, errStr, data);
             }
         });
+        runNextTaskIfExists();
     }
 
     public static void setResumingSupport(String host, Boolean support) {
@@ -296,15 +300,20 @@ public class Cocos2dxDownloader {
         // downloader._httpClient.setMaxRetriesAndTimeout(3, timeoutInSeconds * 1000);
         downloader._httpClient.allowRetryExceptionClass(javax.net.ssl.SSLException.class);
 
+        //disable url auto decode
+        //fix https://github.com/cocos2d/cocos2d-x/issues/18949
+        downloader._httpClient.setURLEncodingEnabled(false);
+        
         downloader._tempFileNameSufix = tempFileNameSufix;
         downloader._countOfMaxProcessingTasks = countOfMaxProcessingTasks;
         return downloader;
     }
 
-    public static void createTask(final Cocos2dxDownloader downloader, int id_, String url_, String path_) {
+    public static void createTask(final Cocos2dxDownloader downloader, int id_, String url_, String path_, String []header_) {
         final int id = id_;
         final String url = url_;
         final String path = path_;
+        final String[] header = header_;
 
         Runnable taskRunnable = new Runnable() {
             @Override
@@ -317,7 +326,9 @@ public class Cocos2dxDownloader {
                 }
 
                 do {
-                    if (0 == path.length()) break;
+                    if (0 == path.length()) {
+                        break;
+                    }
 
                     String domain;
                     try {
@@ -338,9 +349,15 @@ public class Cocos2dxDownloader {
                         requestHeader = false;
                     }
 
+                    Header[] headers = null;
+                    List<Header> listHeaders = new ArrayList<Header>();
+                    for (int i = 0; i < header.length/2; i++) {
+                        listHeaders.add(new BasicHeader(header[i*2], header[(i*2)+1]));
+                    }
+                    headers = listHeaders.toArray(new Header[listHeaders.size()]);
                     if (requestHeader) {
-                        task.handler = new HeadTaskHandler(downloader, id, host, url, path);
-                        task.handle = downloader._httpClient.head(Cocos2dxHelper.getActivity(), url, null, null, task.handler);
+                        task.handler = new HeadTaskHandler(downloader, id, host, url, path, header);
+                        task.handle = downloader._httpClient.head(Cocos2dxHelper.getActivity(), url, headers, null, task.handler);
                         break;
                     }
 
@@ -355,13 +372,11 @@ public class Cocos2dxDownloader {
                     if (tempFile.isDirectory()) break;
 
                     task.handler = new FileTaskHandler(downloader, id, tempFile, finalFile);
-                    Header[] headers = null;
                     long fileLen = tempFile.length();
                     if (supportResuming && fileLen > 0) {
                         // continue download
-                        List<Header> list = new ArrayList<Header>();
-                        list.add(new BasicHeader("Range", "bytes=" + fileLen + "-"));
-                        headers = list.toArray(new Header[list.size()]);
+                        listHeaders.add(new BasicHeader("Range", "bytes=" + fileLen + "-"));
+                        headers = listHeaders.toArray(new Header[listHeaders.size()]);
                     }
                     else if (fileLen > 0) {
                         // Remove previous downloaded context
@@ -390,6 +405,26 @@ public class Cocos2dxDownloader {
             }
         };
         downloader.enqueueTask(taskRunnable);
+    }
+
+    public static void abort(final Cocos2dxDownloader downloader, final int id) {
+        Cocos2dxHelper.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Iterator iter = downloader._taskMap.entrySet().iterator();
+                while (iter.hasNext()) {
+                    Map.Entry entry = (Map.Entry) iter.next();
+                    Object key = entry.getKey();
+                    DownloadTask task = (DownloadTask) entry.getValue();
+                    if (null != task.handle && Integer.parseInt(key.toString()) == id) {
+                        task.handle.cancel(true);
+                        downloader._taskMap.remove(id);
+                        downloader.runNextTaskIfExists();
+                        break;
+                    }
+                }
+            }
+        });
     }
 
     public static void cancelAllRequests(final Cocos2dxDownloader downloader) {
@@ -425,11 +460,12 @@ public class Cocos2dxDownloader {
 
     public void runNextTaskIfExists() {
         synchronized (_taskQueue) {
-            Runnable taskRunnable = Cocos2dxDownloader.this._taskQueue.poll();
-            if (taskRunnable != null) {
+            while (_runningTaskCount < _countOfMaxProcessingTasks && 
+                Cocos2dxDownloader.this._taskQueue.size() > 0) {
+                
+                Runnable taskRunnable = Cocos2dxDownloader.this._taskQueue.poll();
                 Cocos2dxHelper.getActivity().runOnUiThread(taskRunnable);
-            } else {
-                _runningTaskCount--;
+                _runningTaskCount += 1;
             }
         }
     }

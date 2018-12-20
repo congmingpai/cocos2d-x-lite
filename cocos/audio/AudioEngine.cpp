@@ -26,10 +26,13 @@
 #include "platform/CCPlatformConfig.h"
 
 #include "audio/include/AudioEngine.h"
-#include <condition_variable>
-#include <queue>
 #include "platform/CCFileUtils.h"
 #include "base/ccUtils.h"
+
+#include <condition_variable>
+#include <queue>
+#include <thread>
+#include <mutex>
 
 #if CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID
 #include "audio/android/AudioEngine-inl.h"
@@ -52,7 +55,6 @@
 #endif // ERROR
 
 using namespace cocos2d;
-using namespace cocos2d::experimental;
 
 const int AudioEngine::INVALID_AUDIO_ID = -1;
 const float AudioEngine::TIME_UNKNOWN = -1.0f;
@@ -152,6 +154,8 @@ private:
 
 void AudioEngine::end()
 {
+    stopAll();
+
     if (s_threadPool)
     {
         delete s_threadPool;

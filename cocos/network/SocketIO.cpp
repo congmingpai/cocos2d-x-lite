@@ -34,8 +34,8 @@
 #include <sstream>
 #include <iterator>
 #include "base/ccUTF8.h"
-#include "base/CCDirector.h"
-#include "base/CCScheduler.h"
+#include "base/ccMacros.h"
+#include "platform/CCApplication.h"
 #include "network/WebSocket.h"
 #include "network/HttpClient.h"
 
@@ -487,12 +487,12 @@ void SIOClientImpl::handshakeResponse(HttpClient* /*sender*/, HttpResponse *resp
     std::string sid = "";
     int heartbeat = 0, timeout = 0;
 
-    if (res.at(res.size() - 1) == '}') {
+    if (res.find('}') != std::string::npos) {
 
         CCLOGINFO("SIOClientImpl::handshake() Socket.IO 1.x detected");
         _version = SocketIOPacket::SocketIOVersion::V10x;
         // sample: 97:0{"sid":"GMkL6lzCmgMvMs9bAAAA","upgrades":["websocket"],"pingInterval":25000,"pingTimeout":60000}
-
+        //         96:0{"sid":"jzrjDlQusSUxLTd3AAAV","upgrades":["websocket"],"pingInterval":25000,"pingTimeout":5000}2:40
         std::string::size_type a, b;
         a = res.find('{');
         std::string temp = res.substr(a, res.size() - a);
@@ -621,7 +621,7 @@ void SIOClientImpl::disconnect()
         _ws->send(s);
     }
 
-    Director::getInstance()->getScheduler()->unscheduleAllForTarget(this);
+    Application::getInstance()->getScheduler()->unscheduleAllForTarget(this);
 
     _connected = false;
 
@@ -749,7 +749,7 @@ void SIOClientImpl::onOpen(WebSocket* /*ws*/)
         _ws->send(s.data());
     }
 
-    Director::getInstance()->getScheduler()->schedule(CC_SCHEDULE_SELECTOR(SIOClientImpl::heartbeat), this, (_heartbeat * .9f), false);
+    Application::getInstance()->getScheduler()->schedule(CC_CALLBACK_1(SIOClientImpl::heartbeat, this), this, (_heartbeat * .9f), false, "heartbeat");
 
     for (auto& client : _clients)
     {
@@ -1002,8 +1002,8 @@ void SIOClientImpl::onClose(WebSocket* /*ws*/)
         }
         // discard this client
         _connected = false;
-        if (Director::getInstance())
-            Director::getInstance()->getScheduler()->unscheduleAllForTarget(this);
+        if (Application::getInstance())
+            Application::getInstance()->getScheduler()->unscheduleAllForTarget(this);
         
         SocketIO::getInstance()->removeSocket(_uri.getAuthority());
         _clients.clear();
