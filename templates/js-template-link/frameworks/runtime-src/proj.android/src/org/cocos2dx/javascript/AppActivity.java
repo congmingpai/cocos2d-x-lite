@@ -1,8 +1,5 @@
 /****************************************************************************
-Copyright (c) 2008-2010 Ricardo Quesada
-Copyright (c) 2010-2012 cocos2d-x.org
-Copyright (c) 2011      Zynga Inc.
-Copyright (c) 2013-2014 Chukong Technologies Inc.
+Copyright (c) 2015 Chukong Technologies Inc.
  
 http://www.cocos2d-x.org
 
@@ -29,14 +26,16 @@ package org.cocos2dx.javascript;
 import org.cocos2dx.lib.Cocos2dxActivity;
 import org.cocos2dx.lib.Cocos2dxGLSurfaceView;
 
+import org.cocos2dx.javascript.SdkManager;
 import android.os.Bundle;
-import org.cocos2dx.javascript.SDKWrapper;
 
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.util.Log;
 
-public class AppActivity extends Cocos2dxActivity {
+public class AppActivity extends Cocos2dxActivity implements Thread.UncaughtExceptionHandler {
+    private Thread.UncaughtExceptionHandler mDefaultExceptionHandler = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,8 +49,13 @@ public class AppActivity extends Cocos2dxActivity {
             return;
         }
         // DO OTHER INITIALIZATION BELOW
+
+        mDefaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler(this);
         
-        SDKWrapper.getInstance().init(this);
+        SdkManager.activity = this;
+        SdkManager.setAppActivity(this);
+        SdkManager.activityOnCreate();
     }
 	
     @Override
@@ -60,7 +64,7 @@ public class AppActivity extends Cocos2dxActivity {
         // TestCpp should create stencil buffer
         glSurfaceView.setEGLConfigChooser(5, 6, 5, 0, 16, 8);
 
-        SDKWrapper.getInstance().setGLSurfaceView(glSurfaceView);
+        SdkManager.setGLSurfaceView(glSurfaceView);
 
         return glSurfaceView;
     }
@@ -68,72 +72,80 @@ public class AppActivity extends Cocos2dxActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        SDKWrapper.getInstance().onResume();
+        SdkManager.activityOnResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        SDKWrapper.getInstance().onPause();
+        SdkManager.activityOnPause();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        SDKWrapper.getInstance().onDestroy();
+        SdkManager.activityOnDestroy();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        SDKWrapper.getInstance().onActivityResult(requestCode, resultCode, data);
+        SdkManager.activityOnActivityResult(requestCode, resultCode, data);
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        SDKWrapper.getInstance().onNewIntent(intent);
+        SdkManager.activityOnNewIntent(intent);
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
-        SDKWrapper.getInstance().onRestart();
+        SdkManager.activityOnRestart();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        SDKWrapper.getInstance().onStop();
+        SdkManager.activityOnStop();
     }
         
     @Override
     public void onBackPressed() {
-        SDKWrapper.getInstance().onBackPressed();
+        SdkManager.activityOnBackPressed();
         super.onBackPressed();
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
-        SDKWrapper.getInstance().onConfigurationChanged(newConfig);
+        SdkManager.activityOnConfigurationChanged(newConfig);
         super.onConfigurationChanged(newConfig);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        SDKWrapper.getInstance().onRestoreInstanceState(savedInstanceState);
+        SdkManager.activityOnRestoreInstanceState(savedInstanceState);
         super.onRestoreInstanceState(savedInstanceState);
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        SDKWrapper.getInstance().onSaveInstanceState(outState);
+        SdkManager.activityOnSaveInstanceState(outState);
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onStart() {
-        SDKWrapper.getInstance().onStart();
+        SdkManager.activityOnStart();
         super.onStart();
+    }
+
+    @Override
+    public void uncaughtException(Thread thread, Throwable ex) {
+        // TODO: report exception to bugly or sentry
+        if (null != mDefaultExceptionHandler){
+            mDefaultExceptionHandler.uncaughtException(thread, ex);
+        }
     }
 }
