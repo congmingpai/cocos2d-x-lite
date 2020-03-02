@@ -62,7 +62,12 @@ namespace experimental{
                 CLICKED,
                 READY_TO_PLAY
             };
-
+            
+            enum class StyleType
+            {
+                DEFAULT = 0,
+                NONE
+            };
             /**
              * A callback which will be called after specific VideoPlayer event happens.
              */
@@ -97,6 +102,26 @@ namespace experimental{
              * @return A remoting URL address.
              */
             virtual const std::string& getURL() const { return _videoURL;}
+            /**
+             * @brief Set if playback is done in loop mode
+             *
+             * @param looping the video will or not automatically restart at the end
+             */
+            virtual void setLooping(bool looping);
+            
+            /**
+             * Set if the player will enable user input for basic pause and resume of video
+             *
+             * @param enableInput If true, input will be handled for basic functionality (pause/resume)
+             */
+            virtual void setUserInputEnabled(bool enableInput);
+            
+            /**
+             * Set the style of the player
+             *
+             * @param style The corresponding style
+             */
+            virtual void setStyle(StyleType style);
 
             /**
              * Starts playback.
@@ -128,9 +153,13 @@ namespace experimental{
             /**
              * Get the current play time, measure in seconds.
              */
-            float currentTime()const;
+            float currentTime()const{
+                return 0;
+            };
 
-            float duration() const;
+            float duration() const{
+                return 0;
+            };
 
             /**
              * Checks whether the VideoPlayer is playing.
@@ -138,6 +167,20 @@ namespace experimental{
              * @return True if currently playing, false otherwise.
              */
             virtual bool isPlaying() const;
+            
+            /**
+             * Checks whether the VideoPlayer is set with looping mode.
+             *
+             * @return true if the videoplayer is set to loop, false otherwise.
+             */
+            virtual bool isLooping() const;
+            
+            /**
+             * Checks whether the VideoPlayer is set to listen user input to resume and pause the video
+             *
+             * @return true if the videoplayer user input is set, false otherwise.
+             */
+            virtual bool isUserInputEnabled() const;
 
             /**
              * Causes the video player to keep aspect ratio or no when displaying the video.
@@ -204,10 +247,15 @@ namespace experimental{
                 URL
             };
 
-            bool _fullScreenDirty;
-            bool _fullScreenEnabled;
-            bool _keepAspectRatioEnabled;
+            bool _isPlaying = false;
+            bool _isLooping = false;
+            bool _isUserInputEnabled = true;
+            bool _fullScreenDirty = false;
+            bool _fullScreenEnabled = false;
+            bool _keepAspectRatioEnabled = false;
 
+            StyleType _styleType = StyleType::DEFAULT;
+            
             std::string _videoURL;
             Source _videoSource;
 
