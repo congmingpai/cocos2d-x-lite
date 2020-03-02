@@ -146,10 +146,12 @@ typedef NS_ENUM(NSInteger, PlayerbackState) {
 {
     _repeatEnabled = enabled;
     if (self.playerController.player) {
-        if (_repeatEnabled)
+        if (_repeatEnabled) {
             self.playerController.player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
-        else
+        }
+        else {
             self.playerController.player.actionAtItemEnd = AVPlayerActionAtItemEndPause;
+        }
     }
 }
 
@@ -163,10 +165,12 @@ typedef NS_ENUM(NSInteger, PlayerbackState) {
 {
     [self clean];
     
-    if (videoSource == 1)
+    if (videoSource == 1) {
         self.playerController.player = [[[AVPlayer alloc] initWithURL:[NSURL URLWithString:@(videoUrl.c_str())]] autorelease];
-    else
+    }
+    else {
         self.playerController.player = [[[AVPlayer alloc] initWithURL:[NSURL fileURLWithPath:@(videoUrl.c_str())]] autorelease];
+    }
     
     [self setRepeatEnabled:_repeatEnabled];
     [self setKeepRatioEnabled:_keepRatioEnabled];
@@ -194,8 +198,9 @@ typedef NS_ENUM(NSInteger, PlayerbackState) {
 
 -(void) seekTo:(float)sec
 {
-    if (self.playerController.player)
+    if (self.playerController.player) {
         [self.playerController.player seekToTime:CMTimeMake(sec, 1)];
+    }
 }
 
 -(void) setVisible:(BOOL)visible
@@ -206,10 +211,12 @@ typedef NS_ENUM(NSInteger, PlayerbackState) {
 -(void) setKeepRatioEnabled:(BOOL)enabled
 {
     _keepRatioEnabled = enabled;
-    if (_keepRatioEnabled)
+    if (_keepRatioEnabled) {
         self.playerController.videoGravity = AVLayerVideoGravityResizeAspect;
-    else
+    }
+    else {
         self.playerController.videoGravity = AVLayerVideoGravityResizeAspectFill;
+    }
 }
 
 -(void) play
@@ -232,8 +239,9 @@ typedef NS_ENUM(NSInteger, PlayerbackState) {
 
 -(void) resume
 {
-    if (self.playerController.player && _state == PlayerbackStatePaused)
+    if (self.playerController.player && _state == PlayerbackStatePaused) {
         [self play];
+    }
 }
 
 -(void) stop
@@ -249,19 +257,21 @@ typedef NS_ENUM(NSInteger, PlayerbackState) {
 
 -(void) registerPlayerEventListener
 {
-    if (self.playerController.player)
+    if (self.playerController.player) {
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(videoFinished:)
                                                      name:AVPlayerItemDidPlayToEndTimeNotification
                                                    object:self.playerController.player.currentItem];
+    }
 }
 
 -(void) removePlayerEventListener
 {
-    if (self.playerController.player)
+    if (self.playerController.player) {
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                         name:AVPlayerItemDidPlayToEndTimeNotification
                                                       object:self.playerController.player.currentItem];
+    }
 }
 
 @end
