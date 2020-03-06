@@ -317,4 +317,29 @@ float VideoPlayer::duration() const
     return JniHelper::callStaticFloatMethod(videoHelperClassName, "getDuration", _videoPlayerIndex);
 }
 
+void VideoPlayer::setLooping(bool looping)
+{
+    _isLooping = looping;
+}
+
+void VideoPlayer::setUserInputEnabled(bool enableInput)
+{
+    _isUserInputEnabled = enableInput;
+}
+
+void VideoPlayer::setStyle(StyleType style)
+{
+    _styleType = style;
+}
+
+bool VideoPlayer::isLooping() const
+{
+    return _isLooping;
+}
+
+bool VideoPlayer::isUserInputEnabled() const
+{
+    return _isUserInputEnabled;
+}
+
 #endif
