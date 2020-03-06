@@ -222,7 +222,6 @@ typedef NS_ENUM(NSInteger, PlayerbackState) {
 -(void) play
 {
     if (self.playerController.player && _state != PlayerbackStatePlaying) {
-        [self.playerController.player seekToTime:{ 0, 1, 1, 0 }];
         [self.playerController.player play];
         _state = PlayerbackStatePlaying;
         _videoPlayer->onPlayEvent((int)VideoPlayer::EventType::PLAYING);
