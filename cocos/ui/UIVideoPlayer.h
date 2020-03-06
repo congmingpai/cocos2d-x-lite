@@ -62,7 +62,7 @@ namespace experimental{
                 CLICKED,
                 READY_TO_PLAY
             };
-            
+
             enum class StyleType
             {
                 DEFAULT = 0,
@@ -108,14 +108,14 @@ namespace experimental{
              * @param looping the video will or not automatically restart at the end
              */
             virtual void setLooping(bool looping);
-            
+
             /**
              * Set if the player will enable user input for basic pause and resume of video
              *
              * @param enableInput If true, input will be handled for basic functionality (pause/resume)
              */
             virtual void setUserInputEnabled(bool enableInput);
-            
+
             /**
              * Set the style of the player
              *
@@ -153,13 +153,9 @@ namespace experimental{
             /**
              * Get the current play time, measure in seconds.
              */
-            float currentTime()const{
-                return 0;
-            };
+            float currentTime() const;
 
-            float duration() const{
-                return 0;
-            };
+            float duration() const;
 
             /**
              * Checks whether the VideoPlayer is playing.
@@ -167,14 +163,14 @@ namespace experimental{
              * @return True if currently playing, false otherwise.
              */
             virtual bool isPlaying() const;
-            
+
             /**
              * Checks whether the VideoPlayer is set with looping mode.
              *
              * @return true if the videoplayer is set to loop, false otherwise.
              */
             virtual bool isLooping() const;
-            
+
             /**
              * Checks whether the VideoPlayer is set to listen user input to resume and pause the video
              *
@@ -255,7 +251,7 @@ namespace experimental{
             bool _keepAspectRatioEnabled = false;
 
             StyleType _styleType = StyleType::DEFAULT;
-            
+
             std::string _videoURL;
             Source _videoSource;
 

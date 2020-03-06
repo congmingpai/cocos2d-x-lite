@@ -1,19 +1,19 @@
 /****************************************************************************
  Copyright (c) 2014-2016 Chukong Technologies Inc.
  Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
- 
+
  http://www.cocos2d-x.org
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in
  all copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -88,16 +88,16 @@ typedef NS_ENUM(NSInteger, PlayerbackState) {
 {
     if (self = [super init]) {
         self.playerController = [AVPlayerViewController new];
-        
+
         [self setRepeatEnabled:FALSE];
         [self showPlaybackControls:FALSE];
         [self setUserInteractionEnabled:FALSE];
         [self setKeepRatioEnabled:FALSE];
-        
+
         _videoPlayer = (VideoPlayer*)videoPlayer;
         _state = PlayerbackStateUnknown;
     }
-    
+
     return self;
 }
 
@@ -164,19 +164,19 @@ typedef NS_ENUM(NSInteger, PlayerbackState) {
 -(void) setURL:(int)videoSource :(std::string &)videoUrl
 {
     [self clean];
-    
+
     if (videoSource == 1) {
         self.playerController.player = [[[AVPlayer alloc] initWithURL:[NSURL URLWithString:@(videoUrl.c_str())]] autorelease];
     }
     else {
         self.playerController.player = [[[AVPlayer alloc] initWithURL:[NSURL fileURLWithPath:@(videoUrl.c_str())]] autorelease];
     }
-    
+
     [self setRepeatEnabled:_repeatEnabled];
     [self setKeepRatioEnabled:_keepRatioEnabled];
     [self setUserInteractionEnabled:_userInteractionEnabled];
     [self showPlaybackControls:_showPlaybackControls];
-    
+
     auto view = cocos2d::Director::getInstance()->getOpenGLView();
     auto eaglview = (CCEAGLView *) view->getEAGLView();
     [eaglview addSubview:self.playerController.view];
@@ -188,7 +188,7 @@ typedef NS_ENUM(NSInteger, PlayerbackState) {
     if(_videoPlayer != nullptr) {
         _videoPlayer->onPlayEvent((int)VideoPlayer::EventType::COMPLETED);
         _state = PlayerbackStateCompleted;
-        
+
         if (_repeatEnabled) {
             [self seekTo:0];
             [self play];
@@ -222,6 +222,7 @@ typedef NS_ENUM(NSInteger, PlayerbackState) {
 -(void) play
 {
     if (self.playerController.player && _state != PlayerbackStatePlaying) {
+        [self.playerController.player seekToTime:{ 0, 1, 1, 0 }];
         [self.playerController.player play];
         _state = PlayerbackStatePlaying;
         _videoPlayer->onPlayEvent((int)VideoPlayer::EventType::PLAYING);
@@ -289,7 +290,7 @@ VideoPlayer::VideoPlayer()
 ,_isPlaying(false)
 {
     _videoView = [[UIVideoViewWrapperIos alloc] init:this];
-    
+
 #if CC_VIDEOPLAYER_DEBUG_DRAW
     _debugDrawNode = DrawNode::create();
     addChild(_debugDrawNode);
@@ -333,12 +334,12 @@ void VideoPlayer::setUserInputEnabled(bool enableInput)
 void VideoPlayer::setStyle(StyleType style)
 {
     _styleType = style;
-    
+
     switch (style) {
         case StyleType::DEFAULT:
             [((UIVideoViewWrapperIos*)_videoView) showPlaybackControls:TRUE];
             break;
-            
+
         case StyleType::NONE:
             [((UIVideoViewWrapperIos*)_videoView) showPlaybackControls:FALSE];
             break;
@@ -348,27 +349,27 @@ void VideoPlayer::setStyle(StyleType style)
 void VideoPlayer::draw(Renderer* renderer, const Mat4 &transform, uint32_t flags)
 {
     cocos2d::ui::Widget::draw(renderer,transform,flags);
-    
+
     if (flags & FLAGS_TRANSFORM_DIRTY)
     {
         auto directorInstance = Director::getInstance();
         auto glView = directorInstance->getOpenGLView();
         auto frameSize = glView->getFrameSize();
         auto scaleFactor = [static_cast<CCEAGLView *>(glView->getEAGLView()) contentScaleFactor];
-        
+
         auto winSize = directorInstance->getWinSize();
-        
+
         auto leftBottom = convertToWorldSpace(Vec2::ZERO);
         auto rightTop = convertToWorldSpace(Vec2(_contentSize.width,_contentSize.height));
-        
+
         auto uiLeft = (frameSize.width / 2 + (leftBottom.x - winSize.width / 2 ) * glView->getScaleX()) / scaleFactor;
         auto uiTop = (frameSize.height /2 - (rightTop.y - winSize.height / 2) * glView->getScaleY()) / scaleFactor;
-        
+
         [((UIVideoViewWrapperIos*)_videoView) setFrame :uiLeft :uiTop
                                                        :(rightTop.x - leftBottom.x) * glView->getScaleX() / scaleFactor
                                                        :( (rightTop.y - leftBottom.y) * glView->getScaleY()/scaleFactor)];
     }
-    
+
 #if CC_VIDEOPLAYER_DEBUG_DRAW
     _debugDrawNode->clear();
     auto size = getContentSize();
@@ -442,6 +443,16 @@ void VideoPlayer::seekTo(float sec)
     }
 }
 
+float VideoPlayer::duration() const
+{
+    return .0f;
+}
+
+float VideoPlayer::currentTime() const
+{
+    return .0f;
+}
+
 bool VideoPlayer::isPlaying() const
 {
     return _isPlaying;
@@ -460,7 +471,7 @@ bool VideoPlayer::isUserInputEnabled() const
 void VideoPlayer::setVisible(bool visible)
 {
     cocos2d::ui::Widget::setVisible(visible);
-    
+
     if (!visible)
     {
         [((UIVideoViewWrapperIos*)_videoView) setVisible:NO];
@@ -498,7 +509,7 @@ void VideoPlayer::onPlayEvent(int event)
     } else {
         _isPlaying = false;
     }
-    
+
     if (_eventCallback)
     {
         _eventCallback(this, (VideoPlayer::EventType)event);
