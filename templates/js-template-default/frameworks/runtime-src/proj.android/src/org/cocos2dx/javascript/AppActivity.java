@@ -36,7 +36,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 
-public class AppActivity extends Cocos2dxActivity {
+public class AppActivity extends Cocos2dxActivity implements Thread.UncaughtExceptionHandler {
+    private Thread.UncaughtExceptionHandler mDefaultExceptionHandler = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +51,9 @@ public class AppActivity extends Cocos2dxActivity {
             return;
         }
         // DO OTHER INITIALIZATION BELOW
+
+        mDefaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler(this);
         
         SDKWrapper.getInstance().init(this);
     }
@@ -135,5 +139,13 @@ public class AppActivity extends Cocos2dxActivity {
     protected void onStart() {
         SDKWrapper.getInstance().onStart();
         super.onStart();
+    }
+
+    @Override
+    public void uncaughtException(Thread thread, Throwable ex) {
+        // TODO: report exception to bugly or sentry
+        if (null != mDefaultExceptionHandler){
+            mDefaultExceptionHandler.uncaughtException(thread, ex);
+        }
     }
 }
